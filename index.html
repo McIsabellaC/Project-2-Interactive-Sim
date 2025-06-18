@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cheese Run - Main Page</title>
+    <style>
+        body {
+            /* Remove solid background */
+            /* background: #f9e79f; */
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        .cheese-bg {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+            background: #fff9c4; /* light yellow background */
+        }
+        .cheese-emoji-bg {
+            position: absolute;
+            font-size: 3em;
+            opacity: 0.5;
+            animation: floatCheese 10s linear infinite;
+        }
+        @keyframes floatCheese {
+            0% { transform: translateY(110vh) scale(1) rotate(0deg); }
+            100% { transform: translateY(-10vh) scale(1.2) rotate(360deg); }
+        }
+        .container {
+            position: relative;
+            z-index: 1;
+            background: #fffbe6;
+            border-radius: 20px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            padding: 40px 60px;
+            text-align: center;
+        }
+        h1 {
+            color: #e67e22;
+            font-size: 3em;
+            margin-bottom: 0.2em;
+        }
+        p {
+            color: #7d6608;
+            font-size: 1.2em;
+            margin-bottom: 2em;
+        }
+        .start-btn {
+            background: #f7ca18;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 15px 40px;
+            font-size: 1.3em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .start-btn:hover {
+            background: #f5b041;
+        }
+        .cheese-emoji {
+            font-size: 10em;
+            margin-bottom: 0.1em;
+        }
+    </style>
+</head>
+<body>
+    <div class="cheese-bg" id="cheeseBg"></div>
+    <div class="container">
+        <div class="cheese-emoji">🧀</div>
+        <h1>Cheese Run</h1>
+        <p>Help the mouse collect as much cheese as possible!<br>Are you ready to run?</p>
+        <button class="start-btn" onclick="pickGame()">Pick Game</button>
+    </div>
+    <script>
+        function pickGame() {
+            window.location.href = 'pick-game.html';
+        }
+        // Animated cheese background
+        const cheeseBg = document.getElementById('cheeseBg');
+        const cheeseCount = 24;
+        for (let i = 0; i < cheeseCount; i++) {
+            const cheese = document.createElement('div');
+            cheese.className = 'cheese-emoji-bg';
+            cheese.textContent = '🧀';
+            cheese.style.left = Math.random() * 100 + 'vw';
+            cheese.style.animationDuration = (7 + Math.random() * 6) + 's';
+            cheese.style.fontSize = (2 + Math.random() * 3) + 'em';
+            cheese.style.opacity = 0.3 + Math.random() * 0.4;
+            cheese.style.animationDelay = (Math.random() * 10) + 's';
+            cheeseBg.appendChild(cheese);
+        }
+    </script>
+</body>
+</html>

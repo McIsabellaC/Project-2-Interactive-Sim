@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cheese Run - Play</title>
+    <style>
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background: #f9e79f;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            background: #fffbe6;
+            border-radius: 20px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            padding: 0;
+            text-align: center;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            position: relative;
+        }
+        #gameCanvas {
+            background: #f7f1e3;
+            border: 4px solid #e67e22;
+            border-radius: 12px;
+            display: block;
+            margin: 0 auto 20px auto;
+            width: 100vw;
+            height: 90vh;
+            max-width: 100vw;
+            max-height: 90vh;
+        }
+        #score {
+            font-size: 1.3em;
+            color: #7d6608;
+            margin: 10px 0 10px 0;
+        }
+        #restartBtn {
+            display: none;
+            background: #f7ca18;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 30px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+        }
+        #restartBtn:hover {
+            background: #f5b041;
+        }
+        #mainPageBtn {
+            display: none;
+            position: absolute;
+            left: 50%;
+            top: calc(50% + 60px);
+            transform: translate(-50%, 0);
+            z-index: 10;
+            background: #f7ca18;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 30px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        #mainPageBtn:hover {
+            background: #f5b041;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="score">Score: 0</div>
+        <canvas id="gameCanvas"></canvas>
+        <button id="restartBtn" onclick="restartGame()">Restart</button>
+        <button id="mainPageBtn" style="display:none;position:absolute;left:50%;top:calc(50% + 60px);transform:translate(-50%, 0);z-index:10;background:#f7ca18;color:#fff;border:none;border-radius:10px;padding:10px 30px;font-size:1.1em;font-weight:bold;cursor:pointer;transition:background 0.2s;" onclick="window.location.href='index.html'">Main Page</button>
+    </div>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreEl = document.getElementById('score');
+        const restartBtn = document.getElementById('restartBtn');
+
+        const mouse = { x: 100, y: 200, size: 50, speed: 4 };
+        const cheese = { x: 400, y: 200, size: 56 };
+        const cat = { x: 500, y: 100, size: 40, speed: 2.5 };
+        let cat2 = null; // Second cat, appears after level 3
+        let score = 0;
+        let gameOver = false;
+        let keys = {};
+        let level = 1;
+        let cheeseToNextLevel = 5;
+
+        function drawMouse() {
+            // ctx.beginPath();
+            // ctx.arc(mouse.x, mouse.y, mouse.size, 0, Math.PI * 2);
+            // ctx.fillStyle = '#b2babb';
+            // ctx.fill();
+            // ctx.closePath();
+            ctx.font = '48px serif';
+            ctx.fillText('🐭', mouse.x - 30, mouse.y + 24);
+        }
+        function drawCheese() {
+            ctx.font = '56px serif';
+            ctx.fillText('🧀', cheese.x - 28, cheese.y + 28);
+        }
+        function drawCat(catObj) {
+            // ctx.beginPath();
+            // ctx.arc(catObj.x, catObj.y, catObj.size, 0, Math.PI * 2);
+            // ctx.fillStyle = '#f1948a';
+            // ctx.fill();
+            // ctx.closePath();
+            ctx.font = '72px serif';
+            ctx.fillText('🐱', catObj.x - 36, catObj.y + 36);
+        }
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawMouse();
+            drawCheese();
+            drawCat(cat);
+            if (cat2) drawCat(cat2);
+        }
+        function moveMouse() {
+            if (keys['ArrowUp'] && mouse.y - mouse.size > 0) mouse.y -= mouse.speed;
+            if (keys['ArrowDown'] && mouse.y + mouse.size < canvas.height) mouse.y += mouse.speed;
+            if (keys['ArrowLeft'] && mouse.x - mouse.size > 0) mouse.x -= mouse.speed;
+            if (keys['ArrowRight'] && mouse.x + mouse.size < canvas.width) mouse.x += mouse.speed;
+        }
+        function moveCat(catObj) {
+            // Simple AI: cat chases mouse
+            const dx = mouse.x - catObj.x;
+            const dy = mouse.y - catObj.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist > 1) {
+                catObj.x += (dx / dist) * catObj.speed;
+                catObj.y += (dy / dist) * catObj.speed;
+            }
+        }
+        function checkCollision(a, b) {
+            const dx = a.x - b.x;
+            const dy = a.y - b.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            return distance < a.size + b.size - 10;
+        }
+        function randomCheesePos() {
+            cheese.x = Math.random() * (canvas.width - 60) + 30;
+            cheese.y = Math.random() * (canvas.height - 60) + 30;
+        }
+        function updateLevel() {
+            if (score >= cheeseToNextLevel) {
+                level++;
+                cheeseToNextLevel += 5;
+                cat.speed += 0.7;
+                mouse.speed += 0.3;
+                if (cheese.size > 12) cheese.size -= 2;
+                // Add second cat at level 2
+                if (level === 2 && !cat2) {
+                    cat2 = { x: 100, y: 100, size: 40, speed: cat.speed - 0.5 };
+                }
+                scoreEl.textContent = `Level ${level}! Score: ${score}`;
+                setTimeout(() => {
+                    scoreEl.textContent = `Score: ${score}`;
+                }, 1200);
+            }
+        }
+        function update() {
+            if (gameOver) return;
+            moveMouse();
+            moveCat(cat);
+            if (cat2) moveCat(cat2);
+            if (checkCollision(mouse, cheese)) {
+                score++;
+                scoreEl.textContent = 'Score: ' + score;
+                randomCheesePos();
+                updateLevel();
+            }
+            if (checkCollision(mouse, cat) || (cat2 && checkCollision(mouse, cat2))) {
+                gameOver = true;
+                scoreEl.textContent = 'Game Over! Final Score: ' + score + ' | Level: ' + level;
+                restartBtn.style.display = 'inline-block';
+                document.getElementById('mainPageBtn').style.display = 'inline-block';
+            }
+        }
+        function gameLoop() {
+            update();
+            draw();
+            if (!gameOver) requestAnimationFrame(gameLoop);
+        }
+        function restartGame() {
+            mouse.x = 100; mouse.y = 200;
+            cat.x = 500; cat.y = 100;
+            score = 0;
+            level = 1;
+            cheeseToNextLevel = 5;
+            cat.speed = 2.5;
+            mouse.speed = 4;
+            cheese.size = 56;
+            cat2 = null;
+            mouse.size = 50;
+            scoreEl.textContent = 'Score: 0';
+            gameOver = false;
+            restartBtn.style.display = 'none';
+            document.getElementById('mainPageBtn').style.display = 'none';
+            resizeGame();
+            randomCheesePos();
+            gameLoop();
+        }
+        function resizeGame() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight * 0.9;
+        }
+        window.addEventListener('resize', resizeGame);
+        // On first load
+        resizeGame();
+        randomCheesePos();
+        gameLoop();
+        document.addEventListener('keydown', e => { keys[e.key] = true; });
+        document.addEventListener('keyup', e => { keys[e.key] = false; });
+    </script>
+</body>
+</html>

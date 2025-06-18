@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pick Your Game - Cheese Run</title>
+    <style>
+        body {
+            background: #f9e79f;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: #fffbe6;
+            border-radius: 20px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            padding: 40px 60px;
+            text-align: center;
+        }
+        h2 {
+            color: #e67e22;
+            font-size: 2.5em;
+            margin-bottom: 0.5em;
+        }
+        .game-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5em;
+            margin-top: 2em;
+        }
+        .game-option {
+            background: #f7ca18;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 20px 50px;
+            font-size: 1.5em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .game-option:hover {
+            background: #f5b041;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Pick Your Game</h2>
+        <div class="game-list">
+            <button class="game-option" onclick="window.location.href='cheese-run.html'">Cheese Run</button>
+            <!-- Add more game options here -->
+        </div>
+    </div>
+</body>
+</html>
