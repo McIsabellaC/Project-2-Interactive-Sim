@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cheese Storm</title>
+    <style>
+        body {
+            background: #e3f2fd;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .game-container {
+            background: #fffbe6;
+            border-radius: 20px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            padding: 30px;
+            text-align: center;
+        }
+        canvas {
+            background: #b3e5fc;
+            border: 3px solid #1976d2;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: block;
+        }
+        .info {
+            color: #1565c0;
+            margin-top: 10px;
+            font-size: 1.1em;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h2>Cheese Storm 🧀🌩️</h2>
+        <div class="info">Use arrow keys to dodge traps and collect cheese in the storm!</div>
+        <canvas id="subwayCanvas" width="400" height="500"></canvas>
+        <div class="info" id="subwayStatus"></div>
+    </div>
+    <script>
+        // Game constants
+        const canvas = document.getElementById('subwayCanvas');
+        const ctx = canvas.getContext('2d');
+        const status = document.getElementById('subwayStatus');
+        const laneCount = 3;
+        const laneWidth = canvas.width / laneCount;
+        let running = true;
+        let score = 0;
+        let speed = 4;
+        let frame = 0;
+        // Mouse
+        let mouse = { lane: 1, y: canvas.height - 80 };
+        // Obstacles and cheese
+        let objects = [];
+        function drawMouse() {
+            ctx.font = '3.2em serif'; // Increased size
+            ctx.fillText('🐭', mouse.lane * laneWidth + laneWidth/2 - 28, mouse.y + 10);
+        }
+        function drawObjects() {
+            for (const obj of objects) {
+                if (obj.type === 'cheese') {
+                    ctx.font = '3.2em serif'; // Increased size
+                    ctx.fillText('🧀', obj.lane * laneWidth + laneWidth/2 - 28, obj.y + 10);
+                } else if (obj.type === 'trap') {
+                    ctx.font = '3.2em serif'; // Increased size for trap
+                    ctx.fillText('🪤', obj.lane * laneWidth + laneWidth/2 - 28, obj.y + 10);
+                }
+            }
+        }
+        function drawScore() {
+            ctx.font = '1.2em sans-serif';
+            ctx.fillStyle = '#1976d2';
+            ctx.fillText('Cheese: ' + score, 10, 30);
+        }
+        function resetGame() {
+            running = true;
+            score = 0;
+            speed = 4;
+            frame = 0;
+            mouse = { lane: 1, y: canvas.height - 80 };
+            objects = [];
+            status.textContent = '';
+            window.requestAnimationFrame(gameLoop);
+        }
+        function showEndButtons() {
+            const btnDiv = document.createElement('div');
+            btnDiv.style.marginTop = '20px';
+            btnDiv.id = 'endButtons';
+            btnDiv.innerHTML = `
+                <button style="background:#f7ca18;color:#fff;border:none;border-radius:10px;padding:10px 30px;font-size:1.1em;font-weight:bold;cursor:pointer;margin-right:15px;" onclick="restartCheeseStorm()">Restart</button>
+                <button style="background:#1976d2;color:#fff;border:none;border-radius:10px;padding:10px 30px;font-size:1.1em;font-weight:bold;cursor:pointer;" onclick="window.location.href='index.html'">Main Page</button>
+            `;
+            document.querySelector('.game-container').appendChild(btnDiv);
+        }
+        function restartCheeseStorm() {
+            running = true;
+            score = 0;
+            speed = 4;
+            frame = 0;
+            mouse = { lane: 1, y: canvas.height - 80 };
+            objects = [];
+            status.textContent = '';
+            const btnDiv = document.getElementById('endButtons');
+            if (btnDiv) btnDiv.remove();
+            window.requestAnimationFrame(gameLoop);
+        }
+        function gameLoop() {
+            if (!running) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // Increase speed and trap frequency as score increases
+            let dynamicSpeed = speed + Math.floor(score / 5) * 0.3;
+            let trapChance = 0.4 + Math.min(0.4, score * 0.03); // More traps as score increases
+            // Move objects
+            for (const obj of objects) {
+                obj.y += dynamicSpeed;
+            }
+            // Remove off-screen
+            objects = objects.filter(obj => obj.y < canvas.height + 40);
+            // Add new objects
+            if (frame % 50 === 0) {
+                // Make cheese appear more often
+                const type = Math.random() < (0.8 - trapChance / 2) ? 'cheese' : 'trap';
+                const lane = Math.floor(Math.random() * laneCount);
+                objects.push({ type, lane, y: -40 });
+            }
+            // Draw
+            drawMouse();
+            drawObjects();
+            drawScore();
+            // Check collisions
+            for (const obj of objects) {
+                if (obj.lane === mouse.lane && Math.abs(obj.y - mouse.y) < 30) {
+                    if (obj.type === 'cheese') {
+                        score++;
+                        obj.y = canvas.height + 100; // remove
+                        speed += 0.1;
+                    } else if (obj.type === 'trap') {
+                        running = false;
+                        status.textContent = 'You hit a mouse trap! 🪤 Game Over! Cheese: ' + score;
+                        showEndButtons();
+                        return;
+                    }
+                }
+            }
+            frame++;
+            window.requestAnimationFrame(gameLoop);
+        }
+        function handleKey(e) {
+            if (!running) return;
+            if (e.key === 'ArrowLeft' && mouse.lane > 0) mouse.lane--;
+            if (e.key === 'ArrowRight' && mouse.lane < laneCount - 1) mouse.lane++;
+        }
+        window.addEventListener('keydown', handleKey);
+        resetGame();
+    </script>
+</body>
+</html>

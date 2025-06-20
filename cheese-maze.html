@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cheeze Maze</title>
+    <style>
+        body {
+            background: #f9e79f;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .maze-container {
+            background: #fffbe6;
+            border-radius: 20px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            padding: 30px;
+            text-align: center;
+        }
+        canvas {
+            background: #fff9c4;
+            border: 3px solid #e67e22;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        .info {
+            color: #7d6608;
+            margin-top: 10px;
+            font-size: 1.1em;
+        }
+    </style>
+</head>
+<body>
+    <div class="maze-container">
+        <h2>Cheeze Maze 🧀</h2>
+        <div class="info">Use arrow keys to help the mouse 🐭 find the cheese 🧀!</div>
+        <canvas id="mazeCanvas" width="400" height="400"></canvas>
+        <div class="info" id="mazeStatus"></div>
+    </div>
+    <script>
+        // Multiple mazes: 0 = open, 1 = wall, 2 = cheese
+        const mazes = [
+            // Level 1 (very easy)
+            [
+                [1,1,1,1,1,1],
+                [1,0,0,0,2,1],
+                [1,1,1,0,1,1],
+                [1,0,0,0,1,1],
+                [1,1,1,1,1,1]
+            ],
+            // Level 2
+            [
+                [1,1,1,1,1,1,1],
+                [1,0,0,1,0,2,1],
+                [1,1,0,1,0,1,1],
+                [1,0,0,0,0,1,1],
+                [1,1,1,1,1,1,1]
+            ],
+            // Level 3
+            [
+                [1,1,1,1,1,1,1,1],
+                [1,0,0,0,1,0,2,1],
+                [1,1,1,0,1,0,1,1],
+                [1,0,1,0,0,0,1,1],
+                [1,0,1,1,1,0,1,1],
+                [1,0,0,0,1,0,0,1],
+                [1,1,1,1,1,1,1,1]
+            ],
+            // Level 4
+            [
+                [1,1,1,1,1,1,1,1,1],
+                [1,0,0,1,0,0,0,2,1],
+                [1,1,0,1,0,1,1,1,1],
+                [1,0,0,0,0,1,0,0,1],
+                [1,0,1,1,1,1,0,1,1],
+                [1,0,0,0,1,0,0,0,1],
+                [1,1,1,1,1,1,1,1,1]
+            ],
+            // Level 5
+            [
+                [1,1,1,1,1,1,1,1,1,1],
+                [1,0,0,0,1,0,0,0,2,1],
+                [1,1,1,0,1,0,1,1,1,1],
+                [1,0,1,0,0,0,1,0,0,1],
+                [1,0,1,1,1,1,1,1,0,1],
+                [1,0,0,0,1,0,0,0,0,1],
+                [1,1,1,1,1,1,1,1,1,1]
+            ],
+            // Level 6
+            [
+                [1,1,1,1,1,1,1,1,1,1,1],
+                [1,0,0,1,0,0,0,1,0,2,1],
+                [1,1,0,1,0,1,0,1,0,1,1],
+                [1,0,0,0,0,1,0,0,0,0,1],
+                [1,0,1,1,1,1,1,1,1,0,1],
+                [1,0,0,0,1,0,0,0,1,0,1],
+                [1,1,1,1,1,1,1,1,1,1,1]
+            ],
+            // Level 7 (hardest)
+            [
+                [1,1,1,1,1,1,1,1,1,1,1,1],
+                [1,0,0,0,1,0,0,0,1,0,2,1],
+                [1,1,1,0,1,0,1,0,1,0,1,1],
+                [1,0,1,0,0,0,1,0,0,0,0,1],
+                [1,0,1,1,1,0,1,1,1,1,0,1],
+                [1,0,0,0,1,0,0,0,0,1,0,1],
+                [1,1,1,0,1,1,1,1,0,1,1,1],
+                [1,1,1,0,0,0,0,1,0,0,0,1],
+                [1,0,0,0,1,1,0,0,0,1,0,1],
+                [1,1,1,1,1,1,1,1,1,1,1,1]
+            ]
+        ];
+        let level = 0;
+        let maze = mazes[level];
+        let mouse = { x: 1, y: 1 };
+        let cellSize = 50;
+        const canvas = document.getElementById('mazeCanvas');
+        const ctx = canvas.getContext('2d');
+        const status = document.getElementById('mazeStatus');
+
+        function resizeCanvas() {
+            cellSize = Math.floor(Math.min(400 / maze[0].length, 400 / maze.length));
+            canvas.width = cellSize * maze[0].length;
+            canvas.height = cellSize * maze.length;
+        }
+
+        function drawMaze() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let y = 0; y < maze.length; y++) {
+                for (let x = 0; x < maze[y].length; x++) {
+                    if (maze[y][x] === 1) {
+                        ctx.fillStyle = '#e67e22';
+                        ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+                    } else if (maze[y][x] === 2) {
+                        ctx.fillStyle = '#fff9c4';
+                        ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+                        ctx.font = `${Math.floor(cellSize * 0.8)}px serif`;
+                        ctx.fillText('🧀', x * cellSize + cellSize * 0.1, y * cellSize + cellSize * 0.75);
+                    } else {
+                        ctx.fillStyle = '#fff9c4';
+                        ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+                    }
+                }
+            }
+            // Draw mouse
+            ctx.font = `${Math.floor(cellSize * 0.8)}px serif`;
+            ctx.fillText('🐭', mouse.x * cellSize + cellSize * 0.1, mouse.y * cellSize + cellSize * 0.75);
+        }
+
+        function moveMouse(dx, dy) {
+            const newX = mouse.x + dx;
+            const newY = mouse.y + dy;
+            if (maze[newY][newX] === 1) return; // wall
+            mouse.x = newX;
+            mouse.y = newY;
+            drawMaze();
+            if (maze[newY][newX] === 2) {
+                if (level < mazes.length - 1) {
+                    status.textContent = 'You found the cheese! 🧀 Next level...';
+                    window.removeEventListener('keydown', handleKey);
+                    setTimeout(() => {
+                        level++;
+                        maze = mazes[level];
+                        mouse = { x: 1, y: 1 };
+                        resizeCanvas();
+                        drawMaze();
+                        status.textContent = '';
+                        window.addEventListener('keydown', handleKey);
+                    }, 1200);
+                } else {
+                    status.textContent = 'You found all the cheese! 🧀🎉 Maze Master!';
+                    window.removeEventListener('keydown', handleKey);
+                    showEndButtons();
+                }
+            }
+        }
+
+        function handleKey(e) {
+            switch (e.key) {
+                case 'ArrowUp': moveMouse(0, -1); break;
+                case 'ArrowDown': moveMouse(0, 1); break;
+                case 'ArrowLeft': moveMouse(-1, 0); break;
+                case 'ArrowRight': moveMouse(1, 0); break;
+            }
+        }
+
+        function showEndButtons() {
+            const btnDiv = document.createElement('div');
+            btnDiv.style.marginTop = '20px';
+            btnDiv.id = 'endButtons';
+            btnDiv.innerHTML = `
+                <button style="background:#f7ca18;color:#fff;border:none;border-radius:10px;padding:10px 30px;font-size:1.1em;font-weight:bold;cursor:pointer;margin-right:15px;" onclick="restartMaze()">Restart</button>
+                <button style="background:#e67e22;color:#fff;border:none;border-radius:10px;padding:10px 30px;font-size:1.1em;font-weight:bold;cursor:pointer;" onclick="window.location.href='index.html'">Main Page</button>
+            `;
+            document.querySelector('.maze-container').appendChild(btnDiv);
+        }
+
+        function restartMaze() {
+            level = 0;
+            maze = mazes[level];
+            mouse = { x: 1, y: 1 };
+            resizeCanvas();
+            drawMaze();
+            status.textContent = '';
+            window.addEventListener('keydown', handleKey);
+            const btnDiv = document.getElementById('endButtons');
+            if (btnDiv) btnDiv.remove();
+        }
+
+        window.addEventListener('keydown', handleKey);
+        resizeCanvas();
+        drawMaze();
+    </script>
+</body>
+</html>
