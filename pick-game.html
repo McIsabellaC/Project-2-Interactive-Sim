@@ -14,6 +14,26 @@
             justify-content: center;
             height: 100vh;
             margin: 0;
+            overflow: hidden;
+        }
+        .cheese-bg {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+            background: #fff9c4;
+        }
+        .cheese-emoji-bg {
+            position: absolute;
+            font-size: 3em;
+            opacity: 0.5;
+            animation: floatCheese 10s linear infinite;
+        }
+        @keyframes floatCheese {
+            0% { transform: translateY(110vh) scale(1) rotate(0deg); }
+            100% { transform: translateY(-10vh) scale(1.2) rotate(360deg); }
         }
         .container {
             background: #fffbe6;
@@ -21,6 +41,8 @@
             box-shadow: 0 4px 16px rgba(0,0,0,0.1);
             padding: 40px 60px;
             text-align: center;
+            position: relative;
+            z-index: 1;
         }
         h2 {
             color: #e67e22;
@@ -50,14 +72,32 @@
     </style>
 </head>
 <body>
+    <div class="cheese-bg" id="cheeseBg"></div>
     <div class="container">
         <h2>Pick Your Game</h2>
         <div class="game-list">
             <button class="game-option" onclick="window.location.href='cheese-run.html'">Cheese Run</button>
             <button class="game-option" onclick="window.location.href='cheese-maze.html'">Cheeze Maze</button>
             <button class="game-option" onclick="window.location.href='subway-mouse.html'">Cheese Storm</button>
+            <button class="game-option" onclick="window.location.href='obby-of-cheese.html'">Obby of Cheese</button>
             <!-- Add more game options here -->
         </div>
     </div>
+    <script>
+        // Cheese emoji background
+        const cheeseBg = document.getElementById('cheeseBg');
+        const cheeseCount = 24;
+        for (let i = 0; i < cheeseCount; i++) {
+            const cheese = document.createElement('div');
+            cheese.className = 'cheese-emoji-bg';
+            cheese.textContent = '🧀';
+            cheese.style.left = Math.random() * 100 + 'vw';
+            cheese.style.animationDuration = (7 + Math.random() * 6) + 's';
+            cheese.style.fontSize = (2 + Math.random() * 3) + 'em';
+            cheese.style.opacity = 0.3 + Math.random() * 0.4;
+            cheese.style.animationDelay = (Math.random() * 10) + 's';
+            cheeseBg.appendChild(cheese);
+        }
+    </script>
 </body>
 </html>

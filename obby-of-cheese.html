@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Obby of Cheese</title>
+    <style>
+        body {
+            background: #f9e79f;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .obby-container {
+            background: #fffbe6;
+            border-radius: 20px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            padding: 30px;
+            text-align: center;
+        }
+        canvas {
+            background: #fff9c4;
+            border: 3px solid #e67e22;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: block;
+        }
+        .info {
+            color: #7d6608;
+            margin-top: 10px;
+            font-size: 1.1em;
+        }
+        button {
+            background: #f7ca18;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 30px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            margin-right: 15px;
+        }
+        button:hover {
+            background: #e6b32a;
+        }
+    </style>
+</head>
+<body>
+    <div class="obby-container">
+        <h2>Obby of Cheese 🧀</h2>
+        <div class="info">Use arrow keys to jump and move. Get to the cheese at the end!</div>
+        <canvas id="obbyCanvas" width="500" height="300"></canvas>
+        <div class="info" id="obbyStatus"></div>
+    </div>
+    <script>
+        // Platformer/Obby game
+        const canvas = document.getElementById('obbyCanvas');
+        const ctx = canvas.getContext('2d');
+        const status = document.getElementById('obbyStatus');
+        const gravity = 0.7;
+        const platforms = [
+            {x: 0, y: 260, w: 500, h: 40},
+            {x: 80, y: 210, w: 60, h: 10},
+            {x: 180, y: 170, w: 60, h: 10},
+            {x: 300, y: 130, w: 60, h: 10},
+            {x: 400, y: 90, w: 60, h: 10}
+        ];
+        const cheese = {x: 430, y: 40, size: 40};
+        let mouse = {x: 20, y: 220, w: 32, h: 32, vy: 0, onGround: false};
+        let running = true;
+        let keys = { left: false, right: false, up: false };
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // Draw platforms
+            ctx.fillStyle = '#e67e22';
+            for (const p of platforms) {
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+            }
+            // Draw cheese
+            ctx.font = '2.2em serif';
+            ctx.fillText('🧀', cheese.x, cheese.y + cheese.size);
+            // Draw mouse
+            ctx.font = '2.2em serif';
+            ctx.fillText('🐭', mouse.x, mouse.y + mouse.h);
+        }
+        function showEndButtons() {
+            const btnDiv = document.createElement('div');
+            btnDiv.style.marginTop = '20px';
+            btnDiv.id = 'endButtons';
+            btnDiv.innerHTML = `
+                <button style="background:#f7ca18;color:#fff;border:none;border-radius:10px;padding:10px 30px;font-size:1.1em;font-weight:bold;cursor:pointer;margin-right:15px;" onclick="restartObby()">Restart</button>
+                <button style="background:#e67e22;color:#fff;border:none;border-radius:10px;padding:10px 30px;font-size:1.1em;font-weight:bold;cursor:pointer;" onclick="window.location.href='index.html'">Main Page</button>
+            `;
+            document.querySelector('.obby-container').appendChild(btnDiv);
+        }
+        function restartObby() {
+            mouse = {x: 20, y: 220, w: 32, h: 32, vy: 0, onGround: false};
+            running = true;
+            status.textContent = '';
+            const btnDiv = document.getElementById('endButtons');
+            if (btnDiv) btnDiv.remove();
+            gameLoop();
+        }
+        function update() {
+            if (!running) return;
+            // Movement
+            if (keys.left) mouse.x -= 6;
+            if (keys.right) mouse.x += 6;
+            if (keys.up && mouse.onGround) mouse.vy = -13;
+            // Gravity
+            mouse.vy += gravity;
+            mouse.y += mouse.vy;
+            mouse.onGround = false;
+            // Platform collision
+            for (const p of platforms) {
+                if (mouse.x + mouse.w > p.x && mouse.x < p.x + p.w && mouse.y + mouse.h > p.y && mouse.y + mouse.h < p.y + p.h + 10 && mouse.vy >= 0) {
+                    mouse.y = p.y - mouse.h;
+                    mouse.vy = 0;
+                    mouse.onGround = true;
+                }
+            }
+            // Cheese collision
+            if (mouse.x + mouse.w > cheese.x && mouse.x < cheese.x + cheese.size && mouse.y + mouse.h > cheese.y && mouse.y < cheese.y + cheese.size) {
+                running = false;
+                status.textContent = 'You got the cheese! 🧀🎉';
+                showEndButtons();
+            }
+            // Fall off
+            if (mouse.y > canvas.height) {
+                running = false;
+                status.textContent = 'You fell! Try again.';
+                showEndButtons();
+            }
+        }
+        function gameLoop() {
+            update();
+            draw();
+            if (running) requestAnimationFrame(gameLoop);
+        }
+        function handleKeyDown(e) {
+            if (!running) return;
+            if (e.key === 'ArrowLeft') keys.left = true;
+            if (e.key === 'ArrowRight') keys.right = true;
+            if (e.key === 'ArrowUp') keys.up = true;
+        }
+        function handleKeyUp(e) {
+            if (e.key === 'ArrowLeft') keys.left = false;
+            if (e.key === 'ArrowRight') keys.right = false;
+            if (e.key === 'ArrowUp') keys.up = false;
+        }
+        window.addEventListener('keydown', handleKeyDown);
+        window.addEventListener('keyup', handleKeyUp);
+        gameLoop();
+    </script>
+</body>
+</html>
