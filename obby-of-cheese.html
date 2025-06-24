@@ -63,15 +63,39 @@
         const ctx = canvas.getContext('2d');
         const status = document.getElementById('obbyStatus');
         const gravity = 0.7;
-        const platforms = [
-            {x: 0, y: 260, w: 500, h: 40},
-            {x: 80, y: 210, w: 60, h: 10},
-            {x: 180, y: 170, w: 60, h: 10},
-            {x: 300, y: 130, w: 60, h: 10},
-            {x: 400, y: 90, w: 60, h: 10}
+        // Define two levels: simple and complex
+        const levels = [
+            {
+                platforms: [
+                    {x: 0, y: 260, w: 500, h: 40},
+                    {x: 80, y: 210, w: 60, h: 10},
+                    {x: 180, y: 170, w: 60, h: 10},
+                    {x: 300, y: 130, w: 60, h: 10},
+                    {x: 400, y: 90, w: 60, h: 10}
+                ],
+                cheese: {x: 430, y: 40, size: 40},
+                mouseStart: {x: 20, y: 220}
+            },
+            {
+                platforms: [
+                    {x: 0, y: 260, w: 500, h: 40},
+                    {x: 60, y: 210, w: 40, h: 10},
+                    {x: 120, y: 170, w: 40, h: 10},
+                    {x: 200, y: 130, w: 40, h: 10},
+                    {x: 270, y: 180, w: 40, h: 10},
+                    {x: 340, y: 140, w: 40, h: 10},
+                    {x: 410, y: 100, w: 40, h: 10},
+                    {x: 200, y: 80, w: 60, h: 10},
+                    {x: 100, y: 60, w: 40, h: 10}
+                ],
+                cheese: {x: 30, y: 10, size: 40},
+                mouseStart: {x: 20, y: 220}
+            }
         ];
-        const cheese = {x: 430, y: 40, size: 40};
-        let mouse = {x: 20, y: 220, w: 32, h: 32, vy: 0, onGround: false};
+        let currentLevel = 0;
+        let platforms = levels[currentLevel].platforms;
+        let cheese = levels[currentLevel].cheese;
+        let mouse = {x: levels[currentLevel].mouseStart.x, y: levels[currentLevel].mouseStart.y, w: 32, h: 32, vy: 0, onGround: false};
         let running = true;
         let keys = { left: false, right: false, up: false };
         function draw() {
@@ -99,12 +123,31 @@
             document.querySelector('.obby-container').appendChild(btnDiv);
         }
         function restartObby() {
-            mouse = {x: 20, y: 220, w: 32, h: 32, vy: 0, onGround: false};
+            currentLevel = 0;
+            platforms = levels[currentLevel].platforms;
+            cheese = levels[currentLevel].cheese;
+            mouse = {x: levels[currentLevel].mouseStart.x, y: levels[currentLevel].mouseStart.y, w: 32, h: 32, vy: 0, onGround: false};
             running = true;
             status.textContent = '';
             const btnDiv = document.getElementById('endButtons');
             if (btnDiv) btnDiv.remove();
             gameLoop();
+        }
+        function nextLevel() {
+            currentLevel++;
+            if (currentLevel < levels.length) {
+                platforms = levels[currentLevel].platforms;
+                cheese = levels[currentLevel].cheese;
+                mouse = {x: levels[currentLevel].mouseStart.x, y: levels[currentLevel].mouseStart.y, w: 32, h: 32, vy: 0, onGround: false};
+                status.textContent = 'Level 2! Can you get the cheese again?';
+                setTimeout(() => { status.textContent = ''; }, 2000);
+                running = true;
+                gameLoop();
+            } else {
+                running = false;
+                status.textContent = 'You got all the cheese! 🧀🏆';
+                showEndButtons();
+            }
         }
         function update() {
             if (!running) return;
@@ -126,9 +169,15 @@
             }
             // Cheese collision
             if (mouse.x + mouse.w > cheese.x && mouse.x < cheese.x + cheese.size && mouse.y + mouse.h > cheese.y && mouse.y < cheese.y + cheese.size) {
-                running = false;
-                status.textContent = 'You got the cheese! 🧀🎉';
-                showEndButtons();
+                if (currentLevel < levels.length - 1) {
+                    running = false;
+                    status.textContent = 'You got the cheese! 🧀 Next level...';
+                    setTimeout(nextLevel, 1500);
+                } else {
+                    running = false;
+                    status.textContent = 'You got all the cheese! 🧀🏆';
+                    showEndButtons();
+                }
             }
             // Fall off
             if (mouse.y > canvas.height) {
