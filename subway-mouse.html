@@ -133,12 +133,12 @@
             drawMouse();
             drawObjects();
             drawScore();
-            // Check collisions
+            // Check collisions first
             for (const obj of objects) {
                 if (obj.lane === mouse.lane && Math.abs(obj.y - mouse.y) < 30) {
                     if (obj.type === 'cheese') {
                         score++;
-                        obj.y = canvas.height + 100; // remove
+                        obj.collected = true;
                         speed += 0.1;
                     } else if (obj.type === 'trap') {
                         running = false;
@@ -147,6 +147,21 @@
                         return;
                     }
                 }
+            }
+            // Remove off-screen and check for missed cheese
+            let missedCheese = false;
+            objects = objects.filter(obj => {
+                if (obj.y >= canvas.height) {
+                    if (obj.type === 'cheese' && !obj.collected) missedCheese = true;
+                    return false;
+                }
+                return !obj.collected;
+            });
+            if (missedCheese) {
+                running = false;
+                status.textContent = 'You missed a cheese! 🧀 Game Over! Cheese: ' + score;
+                showEndButtons();
+                return;
             }
             frame++;
             window.requestAnimationFrame(gameLoop);
