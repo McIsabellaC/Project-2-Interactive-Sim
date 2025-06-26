@@ -6,8 +6,10 @@
     <title>The Cheese Games - Main Page</title>
     <style>
         body {
-            /* Remove solid background */
-            /* background: #f9e79f; */
+            background-color: #f9e79f;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60"><text y="50" font-size="50">🧀</text></svg>');
+            background-repeat: repeat;
+            background-size: 60px 60px;
             font-family: 'Comic Sans MS', cursive, sans-serif;
             display: flex;
             flex-direction: column;
@@ -28,9 +30,13 @@
         }
         .cheese-emoji-bg {
             position: absolute;
+            left: 0;
+            top: 0;
             font-size: 3em;
             opacity: 0.5;
             animation: floatCheese 10s linear infinite;
+            /* Start offscreen at the bottom */
+            transform: translateY(110vh);
         }
         @keyframes floatCheese {
             0% { transform: translateY(110vh) scale(1) rotate(0deg); }
@@ -95,10 +101,10 @@
             cheese.className = 'cheese-emoji-bg';
             cheese.textContent = '🧀';
             cheese.style.left = Math.random() * 100 + 'vw';
-            cheese.style.animationDuration = (7 + Math.random() * 6) + 's';
+            cheese.style.animationDuration = (3 + Math.random() * 3) + 's';
             cheese.style.fontSize = (2 + Math.random() * 3) + 'em';
             cheese.style.opacity = 0.3 + Math.random() * 0.4;
-            cheese.style.animationDelay = (Math.random() * 10) + 's';
+            cheese.style.animationDelay = (Math.random() * 6) + 's';
             cheeseBg.appendChild(cheese);
         }
     </script>
